@@ -1,21 +1,44 @@
 import streamlit as st
 import scanpy as sc
 
-st.title("🧬 Immune Microenvironment Explorer (PBMC scRNA-seq)")
+st.title("🧬 Immune Microenvironment Explorer")
 
-# Load processed dataset
-adata = sc.read("data/adata_processed.h5ad")
+st.write("Loading PBMC3k dataset...")
 
-st.write("Dataset loaded:", adata)
+# Load built-in PBMC dataset
+adata = sc.datasets.pbmc3k()
 
-# Sidebar selection
-cell_types = adata.obs["cell_type"].unique().tolist()
-selected = st.sidebar.selectbox("Select Cell Type", cell_types)
+# Basic preprocessing
+sc.pp.filter_cells(adata, min_genes=200)
+sc.pp.filter_genes(adata, min_cells=3)
 
-# Filter
-subset = adata[adata.obs["cell_type"] == selected]
+sc.pp.normalize_total(adata, target_sum=1e4)
+sc.pp.log1p(adata)
 
-st.subheader(f"UMAP: {selected}")
+sc.pp.highly_variable_genes(
+    adata,
+    min_mean=0.0125,
+    max_mean=3,
+    min_disp=0.5
+)
 
-sc.pl.umap(subset, color="cell_type", show=False)
-st.pyplot()
+adata = adata[:, adata.var.highly_variable]
+
+sc.pp.scale(adata)
+sc.tl.pca(adata)
+
+sc.pp.neighbors(adata)
+sc.tl.umap(adata)
+
+sc.tl.leiden(adata, resolution=0.5)
+
+st.subheader("UMAP Clusters")
+
+fig = sc.pl.umap(
+    adata,
+    color="leiden",
+    return_fig=True,
+    show=False
+)
+
+st.pyplot(fig)
