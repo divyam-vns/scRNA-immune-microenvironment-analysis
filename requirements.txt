@@ -1,0 +1,10 @@
+scanpy==1.10.3
+anndata
+streamlit
+numpy
+pandas
+scipy
+matplotlib
+leidenalg
+python-igraph
+umap-learn
