@@ -72,12 +72,12 @@ Marker genes used:
 
 ## Immune Cell Type Annotation
 
-![Cell Types](figures/final_outputs/heatmap_leiden_de_heatmap.png)
+![Cell Types](figures/final_outputs/umap_celltypes.png)
 
 ---
 ## Differential expression Heatmap
 
-![heatmap](figures/final_outputs/umap_celltypes.png)
+![heatmap](figures/final_outputs/heatmap_leiden_de_heatmap.png)
 
 ---
 
@@ -167,4 +167,4 @@ Bioinformatics & Computational Biology
 
 ## Note
 
-This project is fully reproducible and designed as a portfolio-grade bioinformatics workflow integrating single-cell analysis and immune communication modeling.
+This project is fully reproducible and designed as a bioinformatics workflow integrating single-cell analysis and immune communication modeling.
