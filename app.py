@@ -1,7 +1,7 @@
 import streamlit as st
 import scanpy as sc
 
-st.title("🧬 Immune Microenvironment Explorer (Corrected)")
+st.title("Immune Microenvironment Explorer")
 
 adata = sc.datasets.pbmc3k()
 
