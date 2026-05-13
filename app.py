@@ -2,100 +2,100 @@
 import streamlit as st
 import scanpy as sc
 import pandas as pd
+import os
 
-st.set_page_config(page_title="Immune Microenvironment Explorer", layout="wide")
+st.set_page_config(page_title="Immune scRNA-seq Explorer", layout="wide")
 
-st.title("🧬 Immune Microenvironment Explorer (scRNA-seq + LIANA)")
+st.title("🧬 scRNA-seq Immune Microenvironment Dashboard")
 
-# -------------------------
-# LOAD DATA (SAFE OPTION)
-# -------------------------
+# -----------------------------
+# SAFE DATA LOADING
+# -----------------------------
 @st.cache_data
 def load_data():
-    try:
-        adata = sc.read("data/adata_processed.h5ad")
-    except:
+    if os.path.exists("data/adata_processed.h5ad"):
+        adata = sc.read_h5ad("data/adata_processed.h5ad")
+    else:
+        st.warning("adata file not found, loading demo PBMC dataset")
         adata = sc.datasets.pbmc3k()
-
-        # minimal preprocessing (safe pipeline)
-        sc.pp.normalize_total(adata, target_sum=1e4)
-        sc.pp.log1p(adata)
-        sc.pp.highly_variable_genes(adata)
-        adata = adata[:, adata.var.highly_variable]
-        sc.pp.scale(adata)
-        sc.tl.pca(adata)
-        sc.pp.neighbors(adata)
-        sc.tl.umap(adata)
-        sc.tl.leiden(adata)
-
-    adata.obs["celltype"] = adata.obs["leiden"]
     return adata
 
 adata = load_data()
 
-# -------------------------
-# LOAD LIANA RESULTS
-# -------------------------
-@st.cache_data
-def load_liana():
-    return pd.read_csv("results/liana_cellcell_interactions.csv")
-
-liana_df = load_liana()
-
-# -------------------------
+# -----------------------------
 # SIDEBAR NAVIGATION
-# -------------------------
+# -----------------------------
 view = st.sidebar.selectbox(
-    "Select View",
-    ["UMAP Clusters", "Gene Expression", "Cell Counts", "Cell Communication"]
+    "Select Analysis View",
+    [
+        "Overview",
+        "UMAP",
+        "Gene Expression",
+        "Cell Types",
+        "Pathway Enrichment"
+    ]
 )
 
-# -------------------------
-# UMAP VIEW
-# -------------------------
-if view == "UMAP Clusters":
-    st.subheader("Immune Cell Clusters (UMAP)")
+# -----------------------------
+# OVERVIEW
+# -----------------------------
+if view == "Overview":
+    st.subheader("Dataset Overview")
+    st.write(adata)
 
-    fig = sc.pl.umap(adata, color="celltype", return_fig=True, show=False)
-    st.pyplot(fig)
+# -----------------------------
+# UMAP
+# -----------------------------
+elif view == "UMAP":
+    st.subheader("UMAP Clusters")
 
-# -------------------------
+    if "X_umap" in adata.obsm:
+        sc.pl.umap(adata, color="leiden", show=False)
+        st.pyplot()
+    else:
+        st.warning("UMAP not available")
+
+# -----------------------------
 # GENE EXPRESSION
-# -------------------------
+# -----------------------------
 elif view == "Gene Expression":
     st.subheader("Gene Expression Viewer")
 
-    gene = st.text_input("Enter gene (e.g., CD3D, MS4A1, NKG7, LYZ)")
+    gene = st.text_input("Enter Gene Name", "CD3D")
 
-    if gene:
-        if gene in adata.var_names:
-            fig = sc.pl.umap(adata, color=gene, return_fig=True, show=False)
-            st.pyplot(fig)
-        else:
-            st.warning("Gene not found in dataset")
+    if gene in adata.var_names:
+        sc.pl.umap(adata, color=gene, show=False)
+        st.pyplot()
+    else:
+        st.error(f"{gene} not found in dataset")
 
-# -------------------------
-# CELL COUNTS
-# -------------------------
-elif view == "Cell Counts":
-    st.subheader("Cluster Distribution")
-    st.write(adata.obs["celltype"].value_counts())
+# -----------------------------
+# CELL TYPES
+# -----------------------------
+elif view == "Cell Types":
+    st.subheader("Cluster Composition")
 
-# -------------------------
-# CELL COMMUNICATION (LIANA)
-# -------------------------
-elif view == "Cell Communication":
-    st.subheader("🧬 Immune Signaling Network (LIANA)")
+    if "leiden" in adata.obs:
+        st.bar_chart(adata.obs["leiden"].value_counts())
+    else:
+        st.warning("No clustering found")
 
-    st.dataframe(liana_df.head(20))
+# -----------------------------
+# PATHWAYS
+# -----------------------------
+elif view == "Pathway Enrichment":
+    st.subheader("GO / KEGG Pathways")
 
-    sender = st.selectbox("Sender cluster", sorted(liana_df["source"].unique()))
-    receiver = st.selectbox("Receiver cluster", sorted(liana_df["target"].unique()))
+    if os.path.exists("results/go_enrichment_results.csv"):
+        go = pd.read_csv("results/go_enrichment_results.csv")
+        st.write("GO Top Results")
+        st.dataframe(go.head(10))
+    else:
+        st.warning("GO results not found")
 
-    filtered = liana_df[
-        (liana_df["source"] == sender) &
-        (liana_df["target"] == receiver)
-    ].sort_values("lrscore", ascending=False)
-
-    st.write("Top ligand–receptor interactions")
-    st.dataframe(filtered.head(15))
+    if os.path.exists("results/kegg_enrichment_results.csv"):
+        kegg = pd.read_csv("results/kegg_enrichment_results.csv")
+        st.write("KEGG Top Results")
+        st.dataframe(kegg.head(10))
+    else:
+        st.warning("KEGG results not found")
