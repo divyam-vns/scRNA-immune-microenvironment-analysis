@@ -1,170 +1,134 @@
 
-# Immune Microenvironment Analysis (scRNA-seq + Cell Communication)
+# 🧬 scRNA-seq Immune Microenvironment Analysis (PBMC)
 
-A complete single-cell RNA-seq analysis pipeline for profiling the immune microenvironment using PBMC data. This project integrates clustering, differential expression, and ligand–receptor signaling analysis with an interactive Streamlit dashboard.
-
----
-
-## Project Overview
-
-This project analyzes immune cell heterogeneity using PBMC single-cell RNA-seq data and reconstructs intercellular communication networks.
-
-Key goals:
-- Identify immune cell populations
-- Perform clustering and visualization
-- Detect marker genes via differential expression
-- Infer cell–cell communication (ligand–receptor signaling)
-- Deploy interactive dashboard for exploration
+An end-to-end single-cell RNA-seq pipeline to study immune cell heterogeneity and intercellular communication using PBMC data.
 
 ---
 
-## Dataset
+## 📊 Project Overview
 
-- PBMC3k dataset
-- Source: Scanpy built-in dataset
-- ~2700 peripheral blood mononuclear cells (PBMCs)
+This project analyzes immune microenvironment structure using scRNA-seq data and integrates:
+
+- Cell clustering (Leiden)
+- Differential gene expression analysis
+- Ligand–receptor communication (LIANA)
+- GO and KEGG pathway enrichment
+- Interactive Streamlit dashboard
 
 ---
 
-## Pipeline Summary
+## 🔬 Workflow
 
-### 1. Data Processing
-- Quality control (filtering genes/cells)
-- Normalization & log transformation
+### 1. Data Acquisition
+- PBMC scRNA-seq dataset loaded using Scanpy
+- Quality control filtering applied
+
+### 2. Preprocessing
+- Normalization (log1p)
 - Highly variable gene selection
+- PCA dimensionality reduction
+- Neighborhood graph construction
 
-### 2. Dimensionality Reduction
-- PCA
+### 3. Clustering & Visualization
 - UMAP embedding
+- Leiden clustering for immune cell populations
 
-### 3. Clustering
-- Leiden clustering for immune cell identification
+### 4. Differential Expression
+- Rank-based gene markers per cluster
+- Identification of immune-specific signatures
 
-### 4. Immune Annotation
-Marker genes used:
-
-| Marker | Cell Type |
-|---|---|
-| CD3D | T cells |
-| MS4A1 | B cells |
-| NKG7 | NK cells |
-| LYZ | Monocytes |
-
-### 5. Differential Expression
-- Rank genes per cluster using Wilcoxon test
-- Marker gene identification
-- Heatmap visualization of cluster signatures
-
-### 6. Cell–Cell Communication (LIANA)
-- Ligand–receptor inference
+### 5. Cell–Cell Communication
+- Ligand–receptor inference using LIANA
 - Immune signaling network reconstruction
-- Interaction scoring between clusters
+
+### 6. Pathway Enrichment
+- GO Biological Process enrichment
+- KEGG pathway analysis
+- Identification of immune functional programs
 
 ---
 
-## Key Outputs
+##  Key Findings
 
-## UMAP Clustering
-
-![Leiden UMAP](figures/final_outputs/umap_leiden.png)
-
----
-
-## Immune Cell Type Annotation
-
-![Cell Types](figures/final_outputs/umap_celltypes.png)
-
----
-## Differential expression Heatmap
-
-![heatmap](figures/final_outputs/heatmap_leiden_de_heatmap.png)
+- Distinct immune cell populations identified (T cells, B cells, monocytes, dendritic cells)
+- Strong immune activation signatures observed in T-cell clusters
+- Key signaling pathways include:
+  - T cell receptor signaling
+  - Cytokine–cytokine receptor interaction
+  - Antigen processing and presentation
 
 ---
 
-### UMAP Visualizations
-- Immune cell clustering
-- Gene expression patterns
-
-### Differential Expression
-- Cluster-specific marker genes
-- Heatmap of top DE genes
-
-### Cell Communication Network
-- Ligand-receptor interaction table
-- Source → Target immune signaling map
-
----
-
-## Tech Stack
+##  Tech Stack
 
 - Python
 - Scanpy
 - AnnData
 - LIANA
-- Pandas / NumPy
+- GSEApy
+- Pandas
 - Streamlit
-- Git & GitHub
+- GitHub
 
 ---
 
-## Project Structure
+##  Streamlit App
+
+Interactive dashboard includes:
+
+- UMAP visualization of immune clusters
+- Gene expression explorer
+- Cell type composition
+- Ligand–receptor interaction viewer
+- GO/KEGG pathway enrichment explorer
+
+---
+
+##  Repository Structure
+
+##  Repository Structure
+
+
 scRNA-immune-microenvironment-analysis/
 │
-├── app.py # Streamlit dashboard
-├── pbmc_analysis.py # Main preprocessing pipeline
-├── DE_analysis.py # Differential expression module
+├── app.py
+├── pbmc_analysis.py
+├── DE_analysis.py
 │
-├── figures/
-│ └── final_outputs/
-│ ├── umap_leiden.png
-│ ├── umap_celltypes.png
-│ ├── rank_genes_groups_leiden_de_markers.png
-│ └── heatmap_leiden_de_heatmap.png
+├── data/
+│ └── adata_processed.h5ad
 │
 ├── results/
-│ └── liana_cellcell_interactions.csv
+│ ├── go_enrichment_results.csv
+│ └── kegg_enrichment_results.csv
+│
+├── figures/
+│ ├── umap_leiden.png
+│ ├── umap_celltypes.png
+│ └── pathways/
+│ ├── go_barplot.png
+│ └── kegg_barplot.png
 │
 └── README.md
 
 
 ---
 
-## Streamlit App Features
+## How to Run
 
-- UMAP visualization of immune cells
-- Marker gene expression explorer
-- Cluster composition viewer
-- Cell–cell communication module (LIANA)
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+ Biological Significance
 
----
+This project demonstrates how single-cell transcriptomics can be used to:
 
-## Biological Insights
+Map immune cell diversity
+Infer functional cell states
+Reconstruct intercellular signaling networks
+Identify immune pathway activation patterns
+👨‍💻 Author
 
-- Identified immune cell heterogeneity in PBMC dataset
-- Revealed cluster-specific marker genes
-- Reconstructed ligand–receptor signaling networks:
-  - S100A9 → CD68 (monocyte activation)
-  - HLA-B → CD3D (T cell signaling)
-  - B2M → CD1C (antigen presentation axis)
-
----
-
-## Future Extensions
-
-- Pathway enrichment (GO / KEGG)
-- Spatial transcriptomics integration
-- Drug target prediction from signaling networks
-- Multi-sample comparative analysis
-
----
-
-## Author
-
-Dr. Divya Mishra, Ph.D.  
-Bioinformatics & Computational Biology
-
----
-
-## Note
-
-This project is fully reproducible and designed as a bioinformatics workflow integrating single-cell analysis and immune communication modeling.
+Dr. Divya Mishra, Ph.D.
+Bioinformatics & Computational Immunology Project
+Built using Scanpy + LIANA + Streamlit
