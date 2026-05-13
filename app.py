@@ -1,50 +1,48 @@
 import streamlit as st
+import pandas as pd
 import scanpy as sc
 
-st.title("Immune Microenvironment Explorer")
+st.title("🧬 Immune Microenvironment Explorer + Cell Communication")
 
+# -------------------------
+# LOAD DATA
+# -------------------------
 adata = sc.datasets.pbmc3k()
 
-sc.pp.filter_cells(adata, min_genes=200)
-sc.pp.filter_genes(adata, min_cells=3)
+adata.obs["celltype"] = sc.tl.leiden(adata, resolution=0.5, copy=True)
 
-sc.pp.normalize_total(adata, target_sum=1e4)
-sc.pp.log1p(adata)
+liana_df = pd.read_csv("results/liana_cellcell_interactions.csv")
 
-# HVGs (DO NOT subset full data)
-sc.pp.highly_variable_genes(
-    adata,
-    min_mean=0.0125,
-    max_mean=3,
-    min_disp=0.5
-)
-
-# PCA uses HVGs only (temporary view)
-adata_hvg = adata[:, adata.var.highly_variable]
-
-sc.pp.scale(adata_hvg)
-sc.tl.pca(adata_hvg)
-sc.pp.neighbors(adata_hvg)
-sc.tl.umap(adata_hvg)
-sc.tl.leiden(adata_hvg, resolution=0.5)
-
-# store embeddings back into full object
-adata.obsm["X_umap"] = adata_hvg.obsm["X_umap"]
-adata.obs["leiden"] = adata_hvg.obs["leiden"]
-
-# sidebar
+# -------------------------
+# SIDEBAR
+# -------------------------
 view = st.sidebar.selectbox(
     "Select View",
-    ["UMAP Clusters", "Gene Expression", "Cell Counts"]
+    ["UMAP Clusters", "Gene Expression", "Cell Counts", "Cell Communication"]
 )
 
+# -------------------------
 # UMAP
+# -------------------------
 if view == "UMAP Clusters":
-    st.subheader("Leiden Clusters")
+    st.subheader("Immune Cell Clusters")
+
+    sc.pp.normalize_total(adata, target_sum=1e4)
+    sc.pp.log1p(adata)
+    sc.pp.highly_variable_genes(adata)
+    adata = adata[:, adata.var.highly_variable]
+    sc.pp.scale(adata)
+    sc.tl.pca(adata)
+    sc.pp.neighbors(adata)
+    sc.tl.umap(adata)
+    sc.tl.leiden(adata)
+
     fig = sc.pl.umap(adata, color="leiden", return_fig=True, show=False)
     st.pyplot(fig)
 
-# Gene expression (NOW WORKS FOR ALL GENES)
+# -------------------------
+# GENE EXPRESSION
+# -------------------------
 elif view == "Gene Expression":
     gene = st.text_input("Enter gene (CD3D, MS4A1, LYZ, NKG7)")
 
@@ -55,6 +53,27 @@ elif view == "Gene Expression":
         else:
             st.warning("Gene not found")
 
-# counts
+# -------------------------
+# CELL COUNTS
+# -------------------------
 elif view == "Cell Counts":
-    st.write(adata.obs["leiden"].value_counts())
+    st.write(adata.obs["celltype"].value_counts())
+
+# -------------------------
+# CELL-CELL COMMUNICATION (NEW)
+# -------------------------
+elif view == "Cell Communication":
+    st.subheader("Ligand-Receptor Interactions (LIANA)")
+
+    st.dataframe(liana_df.head(20))
+
+    sender = st.selectbox("Sender cluster", sorted(liana_df["source"].unique()))
+    receiver = st.selectbox("Receiver cluster", sorted(liana_df["target"].unique()))
+
+    filtered = liana_df[
+        (liana_df["source"] == sender) &
+        (liana_df["target"] == receiver)
+    ].sort_values("lrscore", ascending=False)
+
+    st.write("Top interactions")
+    st.dataframe(filtered.head(10))
