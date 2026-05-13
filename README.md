@@ -62,13 +62,13 @@ Marker genes used:
 
 ## UMAP Clustering
 
-![Leiden UMAP](figures/umap_leiden.png)
+![Leiden UMAP](figures/final_outputs/umap_leiden.png)
 
 ---
 
 ## Immune Cell Type Annotation
 
-![Cell Types](figures/umap_celltypes.png)
+![Cell Types](figures/final_outputs/umap_celltypes.png)
 
 ---
 
