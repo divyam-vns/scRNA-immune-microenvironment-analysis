@@ -1,4 +1,3 @@
-
 import streamlit as st
 import scanpy as sc
 
@@ -8,7 +7,6 @@ st.write("Loading PBMC3k dataset...")
 
 adata = sc.datasets.pbmc3k()
 
-# Basic preprocessing
 sc.pp.filter_cells(adata, min_genes=200)
 sc.pp.filter_genes(adata, min_cells=3)
 
