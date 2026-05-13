@@ -1,11 +1,11 @@
 
-# 🧬 scRNA-seq Immune Microenvironment Analysis (PBMC)
+#  scRNA-seq Immune Microenvironment Analysis (PBMC)
 
 An end-to-end single-cell RNA-seq pipeline to study immune cell heterogeneity and intercellular communication using PBMC data.
 
 ---
 
-## 📊 Project Overview
+##  Project Overview
 
 This project analyzes immune microenvironment structure using scRNA-seq data and integrates:
 
@@ -17,7 +17,7 @@ This project analyzes immune microenvironment structure using scRNA-seq data and
 
 ---
 
-## 🔬 Workflow
+##  Workflow
 
 ### 1. Data Acquisition
 - PBMC scRNA-seq dataset loaded using Scanpy
@@ -85,10 +85,7 @@ Interactive dashboard includes:
 ---
 
 ##  Repository Structure
-
-##  Repository Structure
-
-
+```
 scRNA-immune-microenvironment-analysis/
 │
 ├── app.py
@@ -110,7 +107,7 @@ scRNA-immune-microenvironment-analysis/
 │ └── kegg_barplot.png
 │
 └── README.md
-
+```
 
 ---
 
@@ -119,16 +116,21 @@ scRNA-immune-microenvironment-analysis/
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
- Biological Significance
+```
+---
+## Biological Significance
 
 This project demonstrates how single-cell transcriptomics can be used to:
+- Map immune cell diversity
+- Infer functional cell states
+- Reconstruct intercellular signaling networks
+- Identify immune pathway activation patterns
 
-Map immune cell diversity
-Infer functional cell states
-Reconstruct intercellular signaling networks
-Identify immune pathway activation patterns
-👨‍💻 Author
+---
+
+## Author
 
 Dr. Divya Mishra, Ph.D.
+
 Bioinformatics & Computational Immunology Project
 Built using Scanpy + LIANA + Streamlit
