@@ -4,21 +4,38 @@ import scanpy as sc
 import pandas as pd
 import os
 
-st.set_page_config(page_title="Immune scRNA-seq Explorer", layout="wide")
+st.set_page_config(page_title="scRNA Immune Dashboard", layout="wide")
 
 st.title("🧬 scRNA-seq Immune Microenvironment Dashboard")
 
 # -----------------------------
-# SAFE DATA LOADING
+# SAFE DATA LOADING + FULL PIPELINE
 # -----------------------------
 @st.cache_data
 def load_data():
     if os.path.exists("data/adata_processed.h5ad"):
         adata = sc.read_h5ad("data/adata_processed.h5ad")
-    else:
-        st.warning("adata file not found, loading demo PBMC dataset")
-        adata = sc.datasets.pbmc3k()
+        return adata
+
+    # fallback dataset
+    adata = sc.datasets.pbmc3k()
+
+    # FULL SAFE PREPROCESSING PIPELINE
+    sc.pp.normalize_total(adata, target_sum=1e4)
+    sc.pp.log1p(adata)
+
+    sc.pp.highly_variable_genes(adata, n_top_genes=2000)
+    adata = adata[:, adata.var.highly_variable].copy()
+
+    sc.pp.scale(adata)
+    sc.tl.pca(adata)
+
+    sc.pp.neighbors(adata)
+    sc.tl.umap(adata)
+    sc.tl.leiden(adata, resolution=0.5)
+
     return adata
+
 
 adata = load_data()
 
@@ -26,14 +43,8 @@ adata = load_data()
 # SIDEBAR NAVIGATION
 # -----------------------------
 view = st.sidebar.selectbox(
-    "Select Analysis View",
-    [
-        "Overview",
-        "UMAP",
-        "Gene Expression",
-        "Cell Types",
-        "Pathway Enrichment"
-    ]
+    "Select View",
+    ["Overview", "UMAP", "Gene Expression", "Cell Composition", "Pathways"]
 )
 
 # -----------------------------
@@ -47,55 +58,58 @@ if view == "Overview":
 # UMAP
 # -----------------------------
 elif view == "UMAP":
-    st.subheader("UMAP Clusters")
+    st.subheader("UMAP Clustering")
 
     if "X_umap" in adata.obsm:
         sc.pl.umap(adata, color="leiden", show=False)
         st.pyplot()
     else:
-        st.warning("UMAP not available")
+        st.error("UMAP not available")
 
 # -----------------------------
-# GENE EXPRESSION
+# GENE EXPRESSION (SAFE)
 # -----------------------------
 elif view == "Gene Expression":
     st.subheader("Gene Expression Viewer")
 
-    gene = st.text_input("Enter Gene Name", "CD3D")
+    gene = st.text_input("Enter gene", "CD3D")
 
     if gene in adata.var_names:
         sc.pl.umap(adata, color=gene, show=False)
         st.pyplot()
     else:
-        st.error(f"{gene} not found in dataset")
+        st.warning(f"{gene} not found in dataset")
 
 # -----------------------------
-# CELL TYPES
+# CELL COMPOSITION
 # -----------------------------
-elif view == "Cell Types":
+elif view == "Cell Composition":
     st.subheader("Cluster Composition")
 
     if "leiden" in adata.obs:
         st.bar_chart(adata.obs["leiden"].value_counts())
     else:
-        st.warning("No clustering found")
+        st.warning("No clustering available")
 
 # -----------------------------
-# PATHWAYS
+# PATHWAYS (SAFE CSV HANDLING)
 # -----------------------------
-elif view == "Pathway Enrichment":
-    st.subheader("GO / KEGG Pathways")
+elif view == "Pathways":
+    st.subheader("GO / KEGG Enrichment")
 
-    if os.path.exists("results/go_enrichment_results.csv"):
-        go = pd.read_csv("results/go_enrichment_results.csv")
-        st.write("GO Top Results")
+    go_path = "results/go_enrichment_results.csv"
+    kegg_path = "results/kegg_enrichment_results.csv"
+
+    if os.path.exists(go_path):
+        go = pd.read_csv(go_path)
+        st.write("GO Enrichment")
         st.dataframe(go.head(10))
     else:
-        st.warning("GO results not found")
+        st.warning("GO results missing")
 
-    if os.path.exists("results/kegg_enrichment_results.csv"):
-        kegg = pd.read_csv("results/kegg_enrichment_results.csv")
-        st.write("KEGG Top Results")
+    if os.path.exists(kegg_path):
+        kegg = pd.read_csv(kegg_path)
+        st.write("KEGG Enrichment")
         st.dataframe(kegg.head(10))
     else:
-        st.warning("KEGG results not found")
+        st.warning("KEGG results missing")
